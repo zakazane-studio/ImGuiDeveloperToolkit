@@ -1,0 +1,34 @@
+﻿{
+  "FileVersion": 3,
+  "Version": 1,
+  "VersionName": "1.0",
+  "FriendlyName": "ImGui Developer Toolkit",
+  "Description": "",
+  "Category": "Other",
+  "CreatedBy": "Zakazane Studio",
+  "CreatedByURL": "https://zakazane.studio/",
+  "DocsURL": "https://github.com/zakazane-studio/ImGuiDeveloperToolkit",
+  "MarketplaceURL": "",
+  "CanContainContent": true,
+  "IsBetaVersion": false,
+  "IsExperimentalVersion": false,
+  "Installed": false,
+  "Modules": [
+    {
+      "Name": "ImGuiDeveloperToolkit",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    },
+    {
+      "Name": "ImGuiDeveloperToolkitEditor",
+      "Type": "Editor",
+      "LoadingPhase": "Default"
+    }
+  ],
+  "Plugins": [
+    {
+      "Name": "ImGui",
+      "Enabled": true
+    }
+  ]
+}
