@@ -10,7 +10,7 @@
 struct ImFont;
 
 USTRUCT()
-struct IMGUIDEVELOPERTOOLKIT_API FImGuiDeveloperToolkitFont
+struct IMGUIDEVELOPERTOOLKITSUBSYSTEM_API FImGuiDeveloperToolkitFont
 {
 	GENERATED_BODY();
 
@@ -24,7 +24,7 @@ struct IMGUIDEVELOPERTOOLKIT_API FImGuiDeveloperToolkitFont
 };
 
 USTRUCT()
-struct IMGUIDEVELOPERTOOLKIT_API FImGuiDeveloperToolkitConfiguration
+struct IMGUIDEVELOPERTOOLKITSUBSYSTEM_API FImGuiDeveloperToolkitConfiguration
 {
 	GENERATED_BODY()
 

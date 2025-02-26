@@ -15,13 +15,18 @@
   "Installed": false,
   "Modules": [
     {
-      "Name": "ImGuiDeveloperToolkit",
-      "Type": "Runtime",
+      "Name": "ImGuiDeveloperToolkitEditor",
+      "Type": "Editor",
       "LoadingPhase": "Default"
     },
     {
-      "Name": "ImGuiDeveloperToolkitEditor",
-      "Type": "Editor",
+      "Name": "ImGuiDeveloperToolkitSubsystem",
+      "Type": "DeveloperTool",
+      "LoadingPhase": "Default"
+    },
+    {
+      "Name": "ImGuiDeveloperToolkitWidgets",
+      "Type": "DeveloperTool",
       "LoadingPhase": "Default"
     }
   ],

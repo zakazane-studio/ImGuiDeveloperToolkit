@@ -15,8 +15,8 @@ class UImGuiDeveloperToolkitTool;
  * Stores DeveloperToolkitTools, ticks them and displays a window allowing tool selection and filtering.
  */
 UCLASS()
-class IMGUIDEVELOPERTOOLKIT_API UImGuiDeveloperToolkitSubsystem final : public UEngineSubsystem,
-																		public FTickableGameObject
+class IMGUIDEVELOPERTOOLKITSUBSYSTEM_API UImGuiDeveloperToolkitSubsystem final : public UEngineSubsystem,
+																				 public FTickableGameObject
 {
 	GENERATED_BODY()
 public:

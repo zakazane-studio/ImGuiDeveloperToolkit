@@ -15,7 +15,7 @@ namespace ImGuiDeveloperToolkit
  * @param SizeFactor Size of the window as [0, 1] factor of the main viewport's work area size.
  * @param Cond Determines whether this call is effective. See ImGuiCond_ flags.
  */
-IMGUIDEVELOPERTOOLKIT_API void SetNextWindowPosAndSizeWithinMainViewport(
+IMGUIDEVELOPERTOOLKITSUBSYSTEM_API void SetNextWindowPosAndSizeWithinMainViewport(
 	const ImVec2& PosFactor, const ImVec2& SizeFactor, ImGuiCond Cond = 0);
 
 /**
@@ -26,7 +26,7 @@ IMGUIDEVELOPERTOOLKIT_API void SetNextWindowPosAndSizeWithinMainViewport(
  * @param SizeFactor Size of the window as [0, 1] factor of the main viewport's work area size.
  * @param Cond Determines whether this call is effective. See ImGuiCond_ flags.
  */
-IMGUIDEVELOPERTOOLKIT_API void SetWindowPosAndSizeWithinMainViewport(
+IMGUIDEVELOPERTOOLKITSUBSYSTEM_API void SetWindowPosAndSizeWithinMainViewport(
 	const ImVec2& PosFactor, const ImVec2& SizeFactor, ImGuiCond Cond = 0);
 
 }  // namespace ImGuiDeveloperToolkit

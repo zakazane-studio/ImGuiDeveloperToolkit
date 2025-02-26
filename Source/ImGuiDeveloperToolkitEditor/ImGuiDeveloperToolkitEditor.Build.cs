@@ -22,7 +22,7 @@ public class ImGuiDeveloperToolkitEditor : ModuleRules
 				"Slate",
 				"SlateCore",
 				"UnrealEd",
-				"ImGuiDeveloperToolkit",
+				"ImGuiDeveloperToolkitSubsystem",
 			}
 		);
 	}

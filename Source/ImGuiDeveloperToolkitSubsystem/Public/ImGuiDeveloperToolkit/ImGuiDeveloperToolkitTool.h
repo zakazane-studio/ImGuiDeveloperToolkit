@@ -23,7 +23,7 @@ ENUM_CLASS_FLAGS(EImGuiDeveloperToolkitToolContext);
  * Toolkit, unless ShouldCreateTool returns false.
  */
 UCLASS()
-class IMGUIDEVELOPERTOOLKIT_API UImGuiDeveloperToolkitTool : public UObject
+class IMGUIDEVELOPERTOOLKITSUBSYSTEM_API UImGuiDeveloperToolkitTool : public UObject
 {
 	GENERATED_BODY()
 public:
