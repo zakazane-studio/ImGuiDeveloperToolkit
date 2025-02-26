@@ -1,6 +1,7 @@
 ﻿#include "ImGuiDeveloperToolkit/ImGuiDeveloperToolkitConfiguration.h"
 
 #include "ImGuiContext.h"
+#include "ImGuiDeveloperToolkit/ImGuiDeveloperToolkitWindow.h"
 #include "ImageUtils.h"
 #include "imgui.h"
 
@@ -30,14 +31,18 @@ void FImGuiDeveloperToolkitConfiguration::Initialize()
 	}
 }
 
-void FImGuiDeveloperToolkitConfiguration::Tick(float DeltaTime)
+void FImGuiDeveloperToolkitConfiguration::Tick(const float DeltaTime)
 {
+	using namespace ImGuiDeveloperToolkit;
+
 	if (bShow)
 	{
 		ON_SCOPE_EXIT
 		{
 			ImGui::End();
 		};
+
+		SetNextWindowPosAndSizeWithinMainViewport(ImVec2{.7f, .2f}, ImVec2{.25f, .25f}, ImGuiCond_FirstUseEver);
 
 		if (ImGui::Begin("Configuration", &bShow))
 		{

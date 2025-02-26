@@ -12,7 +12,7 @@ void UImGuiDeveloperToolkitTool::Show()
 	bShow = true;
 }
 
-void UImGuiDeveloperToolkitTool::Tick(float DeltaTime)
+void UImGuiDeveloperToolkitTool::Tick(const float DeltaTime, EImGuiDeveloperToolkitToolContext Context)
 {
-	DoTick(DeltaTime, bShow);
+	DoTick(DeltaTime, bShow, Context);
 }

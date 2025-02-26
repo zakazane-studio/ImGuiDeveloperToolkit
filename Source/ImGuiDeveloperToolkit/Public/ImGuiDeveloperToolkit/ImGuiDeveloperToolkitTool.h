@@ -8,14 +8,15 @@
 
 #include "ImGuiDeveloperToolkitTool.generated.h"
 
-UENUM()
-enum class EImGuiDeveloperToolkitToolContext
+UENUM(BlueprintType, meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor = true))
+enum class EImGuiDeveloperToolkitToolContext : uint8
 {
-	Unknown,
-	EditorOnly,
-	GameOnly,
-	EditorAndGame,
+	Unknown = 0b00 UMETA(Hidden),
+	Editor = 0b01,
+	Game = 0b10,
 };
+
+ENUM_CLASS_FLAGS(EImGuiDeveloperToolkitToolContext);
 
 /**
  * Superclass for Developer Toolkit tools. All non-abstract subclasses will automatically be added to the Developer
@@ -40,7 +41,8 @@ public:
 	/**
 	 * @return Whether the tool is available in editor, game or both. 
 	 */
-	virtual EImGuiDeveloperToolkitToolContext GetContext() const
+	virtual UPARAM(meta = (Bitmask, BitmaskEnum = EImGuiDeveloperToolkitToolContext)) EImGuiDeveloperToolkitToolContext
+		GetContext() const
 		PURE_VIRTUAL(UImGuiDeveloperToolkitTool::GetContext, return EImGuiDeveloperToolkitToolContext::Unknown;);
 
 	/**
@@ -49,7 +51,7 @@ public:
 	 */
 	void Show();
 
-	void Tick(float DeltaTime);
+	void Tick(float DeltaTime, EImGuiDeveloperToolkitToolContext Context);
 
 protected:
 	/**
@@ -60,7 +62,8 @@ protected:
 	 *		Note that this parameter has no effect in either the subsystem or the tool itself. It's just
 	 *		a parameter stored here for ease of access.
 	 */
-	virtual void DoTick(float DeltaTime, bool& bInOutShow) PURE_VIRTUAL(UImGuiDeveloperToolkit::DoTick);
+	virtual void DoTick(float DeltaTime, bool& bInOutShow, EImGuiDeveloperToolkitToolContext Context)
+		PURE_VIRTUAL(UImGuiDeveloperToolkit::DoTick);
 
 private:
 	bool bShow = false;
