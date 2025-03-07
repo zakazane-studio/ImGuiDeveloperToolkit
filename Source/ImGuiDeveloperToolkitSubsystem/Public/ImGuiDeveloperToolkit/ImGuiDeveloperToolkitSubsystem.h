@@ -20,6 +20,9 @@ class IMGUIDEVELOPERTOOLKITSUBSYSTEM_API UImGuiDeveloperToolkitSubsystem final :
 {
 	GENERATED_BODY()
 public:
+	UPROPERTY(VisibleAnywhere)
+	FImGuiDeveloperToolkitConfiguration Configuration;
+
 	// ~ USubsystem
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	// ~ USubsystem
@@ -57,9 +60,6 @@ private:
 
 	UPROPERTY(Transient, VisibleAnywhere)
 	bool bShow = false;
-
-	UPROPERTY(VisibleAnywhere)
-	FImGuiDeveloperToolkitConfiguration Configuration;
 
 	UPROPERTY(Transient, VisibleAnywhere)
 	TArray<TObjectPtr<UImGuiDeveloperToolkitTool>> Tools;

@@ -1,12 +1,106 @@
 ﻿#include "ImGuiDeveloperToolkit/ImGuiDeveloperToolkitConfiguration.h"
 
 #include "ImGuiContext.h"
+#include "ImGuiDeveloperToolkit/ImGuiDeveloperToolkitSubsystem.h"
 #include "ImGuiDeveloperToolkit/ImGuiDeveloperToolkitWindow.h"
 #include "ImageUtils.h"
 #include "imgui.h"
+#include "imgui_internal.h"
+
+namespace ImGuiDeveloperToolkitConfigurationPrivate
+{
+
+struct FConfigurationData
+{
+	FUtf8String FontName = {};
+	int32 FontSize = -1;
+};
+
+FConfigurationData* GConfigurationData = nullptr;
+
+void* ConfigurationHandler_ReadOpen(ImGuiContext* Ctx, ImGuiSettingsHandler* Handler, const char* Name)
+{
+	return reinterpret_cast<void*>(1);
+}
+
+void ConfigurationHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler*, void* Entry, const char* Line)
+{
+	using namespace ImGuiDeveloperToolkit;
+
+	if (GConfigurationData == nullptr)
+	{
+		return;
+	}
+
+	const FUtf8StringView LineView{Line};
+
+	int32 EqIdx = -1;
+	if (!LineView.FindChar(UTF8CHAR{'='}, EqIdx))
+	{
+		return;
+	}
+
+	const FUtf8StringView Key = LineView.Left(EqIdx).TrimStartAndEnd();
+	const FUtf8StringView Value = LineView.RightChop(EqIdx + 1).TrimStartAndEnd();
+
+	if (Key == FUtf8StringView{"FontName"})
+	{
+		GConfigurationData->FontName = Value;
+	}
+
+	if (Key == FUtf8StringView{"FontSize"})
+	{
+		const FUtf8String ValueStr{Value};
+		GConfigurationData->FontSize = FCStringUtf8::Atoi(*ValueStr);
+	}
+}
+
+static void ConfigurationHandler_ApplyAll(ImGuiContext* Ctx, ImGuiSettingsHandler*)
+{
+	if (GConfigurationData == nullptr || !IsValid(GEngine))
+	{
+		return;
+	}
+
+	UImGuiDeveloperToolkitSubsystem* Subsystem = GEngine->GetEngineSubsystem<UImGuiDeveloperToolkitSubsystem>();
+	if (!IsValid(Subsystem))
+	{
+		return;
+	}
+
+	Subsystem->Configuration.SetFont(GConfigurationData->FontName, GConfigurationData->FontSize);
+}
+
+// ReSharper disable once CppParameterMayBeConstPtrOrRef
+static void ConfigurationHandler_WriteAll(ImGuiContext* Ctx, ImGuiSettingsHandler* Handler, ImGuiTextBuffer* Buf)
+{
+	if (GConfigurationData == nullptr || GConfigurationData->FontName.IsEmpty() && GConfigurationData->FontSize <= 0)
+	{
+		return;
+	}
+
+	Buf->appendf("[ImGuiDeveloperToolkitConfiguration][Configuration]\n");
+	Buf->appendf("FontName=%s\n", *GConfigurationData->FontName);
+	Buf->appendf("FontSize=%d\n", GConfigurationData->FontSize);
+}
+
+static void ContextHook_Shutdown(ImGuiContext* Ctx, ImGuiContextHook* Hook)
+{
+	if (GConfigurationData == nullptr)
+	{
+		return;
+	}
+
+	delete GConfigurationData;
+	GConfigurationData = nullptr;
+}
+
+}  // namespace ImGuiDeveloperToolkitConfigurationPrivate
 
 void FImGuiDeveloperToolkitConfiguration::Initialize()
 {
+	using namespace ImGuiDeveloperToolkitConfigurationPrivate;
+
 	const FString EngineFontsDir = FPaths::EngineContentDir() / TEXT("Slate/Fonts");
 	IFileManager& FileManager = IFileManager::Get();
 
@@ -29,6 +123,33 @@ void FImGuiDeveloperToolkitConfiguration::Initialize()
 	{
 		SelectedFont = DefaultFont;
 	}
+
+	FImGuiContext::GetOnPostCreateContext().AddLambda(
+		[](ImGuiContext* Context)
+		{
+			if (Context == nullptr)
+			{
+				return;
+			}
+
+			GConfigurationData = new FConfigurationData;
+
+			// Add .ini handler for stored configuration data
+			ImGuiSettingsHandler IniHandler;
+			IniHandler.TypeName = "ImGuiDeveloperToolkitConfiguration";
+			IniHandler.TypeHash = ImHashStr("ImGuiDeveloperToolkitConfiguration");
+			IniHandler.ReadOpenFn = ConfigurationHandler_ReadOpen;
+			IniHandler.ReadLineFn = ConfigurationHandler_ReadLine;
+			IniHandler.ApplyAllFn = ConfigurationHandler_ApplyAll;
+			IniHandler.WriteAllFn = ConfigurationHandler_WriteAll;
+			ImGui::AddSettingsHandler(&IniHandler);
+
+			// Add context hook for imgui shutdown
+			ImGuiContextHook Hook;
+			Hook.Type = ImGuiContextHookType_Shutdown;
+			Hook.Callback = &ContextHook_Shutdown;
+			ImGui::AddContextHook(Context, &Hook);
+		});
 }
 
 void FImGuiDeveloperToolkitConfiguration::Tick(const float DeltaTime)
@@ -52,12 +173,19 @@ void FImGuiDeveloperToolkitConfiguration::Tick(const float DeltaTime)
 	}
 }
 
+void FImGuiDeveloperToolkitConfiguration::SetFont(const FUtf8String& Name, const int32 Size)
+{
+	SelectedFont.Name = Name;
+	SelectedFont.Size = Size;
+	LoadFonts();
+}
+
 ImFont* FImGuiDeveloperToolkitConfiguration::GetFont() const
 {
 	return SelectedFont.Font;
 }
 
-void FImGuiDeveloperToolkitConfiguration::TickFontSelector(float DeltaTime)
+void FImGuiDeveloperToolkitConfiguration::TickFontSelector(const float DeltaTime)
 {
 	const bool bFontChanged = [this]
 	{
@@ -92,10 +220,12 @@ void FImGuiDeveloperToolkitConfiguration::TickFontSelector(float DeltaTime)
 		LoadFonts().Then(
 			[this, bFontChanged](TFuture<bool>&& SuccessFuture)
 			{
-				if (bFontChanged && SuccessFuture.Get())
+				if (!SuccessFuture.Get() || !bFontChanged)
 				{
-					ShowResetFontPopup_S = 5;
+					return;
 				}
+
+				ShowResetFontPopup_S = 5;
 			});
 	}
 
@@ -114,9 +244,13 @@ void FImGuiDeveloperToolkitConfiguration::TickResetFontPopup(const float DeltaTi
 		{
 			ImGui::Text("Example text:");
 
+			ImGui::NewLine();
+
 			ImGui::PushFont(SelectedFont.Font);
 			ImGui::Text("The quick brown fox jumps over the lazy dog");
 			ImGui::PopFont();
+
+			ImGui::NewLine();
 
 			ImGui::Text("Keep selected font?");
 
@@ -154,6 +288,8 @@ void FImGuiDeveloperToolkitConfiguration::TickResetFontPopup(const float DeltaTi
 
 TFuture<bool> FImGuiDeveloperToolkitConfiguration::LoadFonts()
 {
+	using namespace ImGuiDeveloperToolkitConfigurationPrivate;
+
 	const TSharedPtr<TPromise<bool>> Promise = MakeShared<TPromise<bool>>();
 
 	const TSharedPtr<FImGuiContext> ImGuiContext = FImGuiContext::Get(ImGui::GetCurrentContext());
@@ -161,6 +297,12 @@ TFuture<bool> FImGuiDeveloperToolkitConfiguration::LoadFonts()
 	{
 		Promise->SetValue(false);
 		return Promise->GetFuture();
+	}
+
+	if (GConfigurationData != nullptr)
+	{
+		GConfigurationData->FontName = SelectedFont.Name;
+		GConfigurationData->FontSize = SelectedFont.Size;
 	}
 
 	SetSelectedFontDelegateHandle = ImGuiContext->OnPreFrame.AddLambda(

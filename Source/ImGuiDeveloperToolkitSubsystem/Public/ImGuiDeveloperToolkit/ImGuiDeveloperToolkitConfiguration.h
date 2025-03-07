@@ -35,11 +35,12 @@ struct IMGUIDEVELOPERTOOLKITSUBSYSTEM_API FImGuiDeveloperToolkitConfiguration
 
 	void Tick(float DeltaTime);
 
+	void SetFont(const FUtf8String& Name, int32 Size);
+
 	ImFont* GetFont() const;
 
 private:
-	UPROPERTY(Transient, VisibleAnywhere)
-	TMap<FUtf8String, FUtf8String> AvailableFontPathsByName;
+	UPROPERTY(Transient, VisibleAnywhere) TMap<FUtf8String, FUtf8String> AvailableFontPathsByName;
 
 	UPROPERTY(VisibleAnywhere)
 	FImGuiDeveloperToolkitFont SelectedFont;
