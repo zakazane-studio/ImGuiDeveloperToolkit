@@ -18,53 +18,35 @@ enum class EImGuiDeveloperToolkitToolContext : uint8
 
 ENUM_CLASS_FLAGS(EImGuiDeveloperToolkitToolContext);
 
-/**
- * Superclass for Developer Toolkit tools. All non-abstract subclasses will automatically be added to the Developer
- * Toolkit, unless ShouldCreateTool returns false.
- */
+/// Superclass for Developer Toolkit tools. All non-abstract subclasses will automatically be added to the Developer
+/// Toolkit, unless ShouldCreateTool returns false.
 UCLASS()
 class IMGUIDEVELOPERTOOLKITSUBSYSTEM_API UImGuiDeveloperToolkitTool : public UObject
 {
 	GENERATED_BODY()
 public:
-	/**
-	 * Whether the tool should be created in the current context. Called on the class default object. 
-	 */
+	/// Whether the tool should be created in the current context. Called on the class default object.
 	virtual bool ShouldCreateTool() const;
 
-	/**
-	 * @return Name of the tool as shown in the toolkit window. 
-	 */
+	/// @return Name of the tool as shown in the toolkit window.
 	virtual FAnsiString GetToolName() const
 		PURE_VIRTUAL(UImGuiDeveloperToolkitTool::GetToolName, return "-- INVALID NAME --";);
 
-	/**
-	 * @return Whether the tool is available in editor, game or both. 
-	 */
+	/// @return Whether the tool is available in editor, game or both.
 	virtual UPARAM(meta = (Bitmask, BitmaskEnum = EImGuiDeveloperToolkitToolContext)) EImGuiDeveloperToolkitToolContext
 		GetContext() const
 		PURE_VIRTUAL(UImGuiDeveloperToolkitTool::GetContext, return EImGuiDeveloperToolkitToolContext::Unknown;);
 
-	/**
-	 * Marks the tool as shown. Note that this does not display any windows, the information is just passed
-	 * down to the implementation class to be handled there.
-	 */
-	void Show();
-
-	void Tick(float DeltaTime, EImGuiDeveloperToolkitToolContext Context);
-
-protected:
-	/**
-	 * Called every frame by the DeveloperToolkitSubsystem if the tool is within the current context (i.e. EditorOnly
-	 * tools show only in editor when not simulating the game, GameOnly show only when simulating the game)
-	 * - even when not shown.
-	 * @param bInOutShow whether the window is currently shown. Can be internally changed to true by the tool.
-	 *		Note that this parameter has no effect in either the subsystem or the tool itself. It's just
-	 *		a parameter stored here for ease of access.
-	 */
-	virtual void DoTick(float DeltaTime, bool& bInOutShow, EImGuiDeveloperToolkitToolContext Context)
-		PURE_VIRTUAL(UImGuiDeveloperToolkit::DoTick);
-
-private:
-	bool bShow = false;
+	/// Called every frame by the DeveloperToolkitSubsystem if the tool is within the current context (i.e. EditorOnly
+	/// tools show only in editor when not simulating the game, GameOnly show only when simulating the game)
+	/// - even when not shown.
+	///
+	/// @param DeltaTime time since last tick in seconds
+	/// @param bInOutShown whether the window is currently shown. Can be internally changed to true by the tool.
+	///		Note that this parameter has no effect in either the subsystem or the tool itself. It's just
+	///		a parameter stored here for ease of access.
+	/// @param Context context in which the toolkit is being run
+	/// @return whether the tool should be shown
+	virtual void Tick(float DeltaTime, bool& bInOutShown, EImGuiDeveloperToolkitToolContext Context)
+		PURE_VIRTUAL(UImGuiDeveloperToolkit::Tick);
 };

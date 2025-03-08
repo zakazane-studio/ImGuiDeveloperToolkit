@@ -29,7 +29,7 @@ struct IMGUIDEVELOPERTOOLKITSUBSYSTEM_API FImGuiDeveloperToolkitConfiguration
 	GENERATED_BODY()
 
 	UPROPERTY(Transient, VisibleAnywhere)
-	bool bShow = false;
+	bool bShown = false;
 
 	void Initialize();
 
@@ -38,6 +38,10 @@ struct IMGUIDEVELOPERTOOLKITSUBSYSTEM_API FImGuiDeveloperToolkitConfiguration
 	void SetFont(const FUtf8String& Name, int32 Size);
 
 	ImFont* GetFont() const;
+
+	void SetShown(const FAnsiString& ToolName, bool bToolShown);
+
+	bool IsShown(const FAnsiString& ToolName) const;
 
 private:
 	UPROPERTY(Transient, VisibleAnywhere) TMap<FUtf8String, FUtf8String> AvailableFontPathsByName;

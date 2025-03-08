@@ -33,8 +33,8 @@ void UImGuiDeveloperToolkitSubsystem::Initialize(FSubsystemCollectionBase& Colle
 {
 	Super::Initialize(Collection);
 
-	PopulateTools();
 	Configuration.Initialize();
+	PopulateTools();
 }
 
 void UImGuiDeveloperToolkitSubsystem::ToggleShow()
@@ -47,7 +47,7 @@ bool UImGuiDeveloperToolkitSubsystem::IsShow() const
 	return bShow;
 }
 
-void UImGuiDeveloperToolkitSubsystem::Tick(float DeltaTime)
+void UImGuiDeveloperToolkitSubsystem::Tick(const float DeltaTime)
 {
 	using namespace ImGuiDeveloperToolkitSubsystemPrivate;
 
@@ -174,7 +174,7 @@ void UImGuiDeveloperToolkitSubsystem::TickMainMenu(const float DeltaTime)
 {
 	if (ImGui::BeginMenuBar())
 	{
-		Configuration.bShow = ImGui::MenuItem("Configuration") || Configuration.bShow;
+		Configuration.bShown = ImGui::MenuItem("Configuration") || Configuration.bShown;
 		ImGui::EndMenuBar();
 	}
 }
@@ -198,7 +198,7 @@ void UImGuiDeveloperToolkitSubsystem::TickToolList(const float DeltaTime)
 		{
 			if (ImGui::Button(*ToolName))
 			{
-				Tool->Show();
+				Configuration.SetShown(ToolName, true);
 				bShow = false;
 			}
 		}
@@ -218,6 +218,11 @@ void UImGuiDeveloperToolkitSubsystem::TickTools(const float DeltaTime)
 			continue;
 		}
 
-		Tool->Tick(DeltaTime, Context);
+		const FAnsiString ToolName = Tool->GetToolName();
+
+		bool bShown = Configuration.IsShown(ToolName);
+		Tool->Tick(DeltaTime, bShown, Context);
+
+		Configuration.SetShown(ToolName, bShown);
 	}
 }

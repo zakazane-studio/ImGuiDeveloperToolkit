@@ -14,13 +14,35 @@ struct FConfigurationData
 {
 	FUtf8String FontName = {};
 	int32 FontSize = -1;
+	TMap<FAnsiString, bool> ToolShownByName = {};
 };
+
+enum class EConfigurationSection : intptr_t
+{
+	Font = 1,
+	Tools,
+};
+
+const FAnsiStringView FontSectionName{"Font"};
+const FAnsiStringView ToolsSectionName{"Tools"};
 
 FConfigurationData* GConfigurationData = nullptr;
 
 void* ConfigurationHandler_ReadOpen(ImGuiContext* Ctx, ImGuiSettingsHandler* Handler, const char* Name)
 {
-	return reinterpret_cast<void*>(1);
+	const FAnsiStringView NameView{Name};
+
+	if (NameView == FontSectionName)
+	{
+		return reinterpret_cast<void*>(EConfigurationSection::Font);
+	}
+
+	if (NameView == ToolsSectionName)
+	{
+		return reinterpret_cast<void*>(EConfigurationSection::Tools);
+	}
+
+	return nullptr;
 }
 
 void ConfigurationHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler*, void* Entry, const char* Line)
@@ -43,15 +65,25 @@ void ConfigurationHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler*, void* E
 	const FUtf8StringView Key = LineView.Left(EqIdx).TrimStartAndEnd();
 	const FUtf8StringView Value = LineView.RightChop(EqIdx + 1).TrimStartAndEnd();
 
-	if (Key == FUtf8StringView{"FontName"})
-	{
-		GConfigurationData->FontName = Value;
-	}
+	const EConfigurationSection Section = static_cast<EConfigurationSection>(reinterpret_cast<intptr_t>(Entry));
 
-	if (Key == FUtf8StringView{"FontSize"})
+	if (Section == EConfigurationSection::Font)
+	{
+		if (Key == FUtf8StringView{"Name"})
+		{
+			GConfigurationData->FontName = Value;
+		}
+		else if (Key == FUtf8StringView{"Size"})
+		{
+			const FUtf8String ValueStr{Value};
+			GConfigurationData->FontSize = FCStringUtf8::Atoi(*ValueStr);
+		}
+	}
+	else if (Section == EConfigurationSection::Tools)
 	{
 		const FUtf8String ValueStr{Value};
-		GConfigurationData->FontSize = FCStringUtf8::Atoi(*ValueStr);
+		const bool bShown = FCStringUtf8::ToBool(*ValueStr);
+		GConfigurationData->ToolShownByName.Emplace(Key, bShown);
 	}
 }
 
@@ -79,9 +111,15 @@ static void ConfigurationHandler_WriteAll(ImGuiContext* Ctx, ImGuiSettingsHandle
 		return;
 	}
 
-	Buf->appendf("[ImGuiDeveloperToolkitConfiguration][Configuration]\n");
-	Buf->appendf("FontName=%s\n", *GConfigurationData->FontName);
-	Buf->appendf("FontSize=%d\n", GConfigurationData->FontSize);
+	Buf->appendf("[ImGuiDeveloperToolkitConfiguration][Font]\n");
+	Buf->appendf("Name=%s\n", *GConfigurationData->FontName);
+	Buf->appendf("Size=%d\n", GConfigurationData->FontSize);
+
+	Buf->appendf("\n[ImGuiDeveloperToolkitConfiguration][Tools]\n");
+	for (const auto& [ToolName, bShow] : GConfigurationData->ToolShownByName)
+	{
+		Buf->appendf("%s=%d\n", *ToolName, bShow);
+	}
 }
 
 static void ContextHook_Shutdown(ImGuiContext* Ctx, ImGuiContextHook* Hook)
@@ -156,7 +194,7 @@ void FImGuiDeveloperToolkitConfiguration::Tick(const float DeltaTime)
 {
 	using namespace ImGuiDeveloperToolkit;
 
-	if (bShow)
+	if (bShown)
 	{
 		ON_SCOPE_EXIT
 		{
@@ -165,7 +203,7 @@ void FImGuiDeveloperToolkitConfiguration::Tick(const float DeltaTime)
 
 		SetNextWindowPosAndSizeWithinMainViewport(ImVec2{.7f, .2f}, ImVec2{.25f, .25f}, ImGuiCond_FirstUseEver);
 
-		if (ImGui::Begin("Configuration", &bShow))
+		if (ImGui::Begin("Configuration", &bShown))
 		{
 			ImGui::ShowStyleSelector("Theme");
 			TickFontSelector(DeltaTime);
@@ -183,6 +221,32 @@ void FImGuiDeveloperToolkitConfiguration::SetFont(const FUtf8String& Name, const
 ImFont* FImGuiDeveloperToolkitConfiguration::GetFont() const
 {
 	return SelectedFont.Font;
+}
+
+// ReSharper disable once CppMemberFunctionMayBeStatic
+void FImGuiDeveloperToolkitConfiguration::SetShown(const FAnsiString& ToolName, const bool bToolShown)
+{
+	using namespace ImGuiDeveloperToolkitConfigurationPrivate;
+
+	if (GConfigurationData == nullptr)
+	{
+		return;
+	}
+
+	GConfigurationData->ToolShownByName.FindOrAdd(ToolName) = bToolShown;
+}
+
+// ReSharper disable once CppMemberFunctionMayBeStatic
+bool FImGuiDeveloperToolkitConfiguration::IsShown(const FAnsiString& ToolName) const
+{
+	using namespace ImGuiDeveloperToolkitConfigurationPrivate;
+
+	if (GConfigurationData == nullptr)
+	{
+		return false;
+	}
+
+	return GConfigurationData->ToolShownByName.FindOrAdd(ToolName, false);
 }
 
 void FImGuiDeveloperToolkitConfiguration::TickFontSelector(const float DeltaTime)
