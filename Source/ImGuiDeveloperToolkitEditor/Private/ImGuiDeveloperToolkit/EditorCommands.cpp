@@ -1,9 +1,9 @@
-﻿#include "ImGuiDeveloperToolkitEditor.h"
+﻿#include "EditorCommands.h"
 
 #include "ImGuiDeveloperToolkit/ImGuiDeveloperToolkitSubsystem.h"
 #include "LevelEditor.h"
 
-#define LOCTEXT_NAMESPACE "FImGuiDeveloperToolkitEditorModule"
+#define LOCTEXT_NAMESPACE "EditorCommands"
 
 namespace ImGuiDeveloperToolkit
 {
@@ -11,10 +11,10 @@ namespace ImGuiDeveloperToolkit
 namespace Private
 {
 
-class FDeveloperToolkitEditorCommands final : public TCommands<FDeveloperToolkitEditorCommands>
+class FEditorCommands final : public TCommands<FEditorCommands>
 {
 public:
-	FDeveloperToolkitEditorCommands()
+	FEditorCommands()
 		: TCommands{
 			  TEXT("DeveloperToolkitEditorCommands"),
 			  FText::FromString("DeveloperToolkitEditorCommands"),
@@ -28,7 +28,7 @@ public:
 	TSharedPtr<FUICommandInfo> ShowDeveloperToolkitCommand = nullptr;
 };
 
-void FDeveloperToolkitEditorCommands::RegisterCommands()
+void FEditorCommands::RegisterCommands()
 {
 	UI_COMMAND(
 		ShowDeveloperToolkitCommand,
@@ -50,12 +50,12 @@ UImGuiDeveloperToolkitSubsystem* GetEditorImGuiSubsystem()
 
 }  // namespace Private
 
-TSharedRef<FUICommandList> RegisterImGuiEditorCommands()
+TSharedRef<FUICommandList> RegisterEditorCommands()
 {
-	Private::FDeveloperToolkitEditorCommands::Register();
+	Private::FEditorCommands::Register();
 	TSharedRef<FUICommandList> CommandList = MakeShared<FUICommandList>();
 
-	const Private::FDeveloperToolkitEditorCommands& Commands = Private::FDeveloperToolkitEditorCommands::Get();
+	const Private::FEditorCommands& Commands = Private::FEditorCommands::Get();
 	CommandList->MapAction(
 		Commands.ShowDeveloperToolkitCommand,
 		FExecuteAction::CreateLambda(
@@ -89,36 +89,19 @@ TSharedRef<FUICommandList> RegisterImGuiEditorCommands()
 		EExtensionHook::After,
 		CommandList,
 		FMenuExtensionDelegate::CreateLambda(
-			[](FMenuBuilder& MenuBuilder) {
-				MenuBuilder.AddMenuEntry(Private::FDeveloperToolkitEditorCommands::Get().ShowDeveloperToolkitCommand);
-			}));
+			[](FMenuBuilder& MenuBuilder)
+			{ MenuBuilder.AddMenuEntry(Private::FEditorCommands::Get().ShowDeveloperToolkitCommand); }));
 
 	LevelEditorModule.GetMenuExtensibilityManager()->AddExtender(MenuExtender);
 
 	return CommandList;
 }
 
-void UnregisterImGuiEditorCommands()
+void UnregisterEditorCommands()
 {
-	Private::FDeveloperToolkitEditorCommands::Unregister();
+	Private::FEditorCommands::Unregister();
 }
 
 }  // namespace ImGuiDeveloperToolkit
 
-void FImGuiDeveloperToolkitEditorModule::StartupModule()
-{
-	using namespace ImGuiDeveloperToolkit;
-
-	RegisterImGuiEditorCommands();
-}
-
-void FImGuiDeveloperToolkitEditorModule::ShutdownModule()
-{
-	using namespace ImGuiDeveloperToolkit;
-
-	UnregisterImGuiEditorCommands();
-}
-
 #undef LOCTEXT_NAMESPACE
-
-IMPLEMENT_MODULE(FImGuiDeveloperToolkitEditorModule, ImGuiDeveloperToolkitEditor)

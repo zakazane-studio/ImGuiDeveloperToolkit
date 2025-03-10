@@ -2,9 +2,9 @@
 
 using UnrealBuildTool;
 
-public class ImGuiDeveloperToolkit : ModuleRules
+public class ImGuiDeveloperToolkitSubsystem : ModuleRules
 {
-	public ImGuiDeveloperToolkit(ReadOnlyTargetRules Target) : base(Target)
+	public ImGuiDeveloperToolkitSubsystem(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
@@ -27,7 +27,8 @@ public class ImGuiDeveloperToolkit : ModuleRules
 		PublicDependencyModuleNames.AddRange(
 			new[]
 			{
-				"Core"
+				"Core",
+				"ImGuiLibrary"
 				// ... add other public dependencies that you statically link with here ...
 			}
 		);
@@ -44,16 +45,12 @@ public class ImGuiDeveloperToolkit : ModuleRules
 			}
 		);
 
-		if (Target.Type == TargetRules.TargetType.Editor)
-		{
-			PrivateDependencyModuleNames.AddRange(new[] { "UnrealEd" });
-		}
+		if (Target.Type == TargetRules.TargetType.Editor) PrivateDependencyModuleNames.AddRange(["UnrealEd"]);
 
 		DynamicallyLoadedModuleNames.AddRange(
-			new string[]
-			{
+			[
 				// ... add any modules that your module loads dynamically here ...
-			}
+			]
 		);
 	}
 }

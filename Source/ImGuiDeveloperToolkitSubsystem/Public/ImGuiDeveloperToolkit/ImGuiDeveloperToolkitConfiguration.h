@@ -10,7 +10,7 @@
 struct ImFont;
 
 USTRUCT()
-struct IMGUIDEVELOPERTOOLKIT_API FImGuiDeveloperToolkitFont
+struct IMGUIDEVELOPERTOOLKITSUBSYSTEM_API FImGuiDeveloperToolkitFont
 {
 	GENERATED_BODY();
 
@@ -24,22 +24,27 @@ struct IMGUIDEVELOPERTOOLKIT_API FImGuiDeveloperToolkitFont
 };
 
 USTRUCT()
-struct IMGUIDEVELOPERTOOLKIT_API FImGuiDeveloperToolkitConfiguration
+struct IMGUIDEVELOPERTOOLKITSUBSYSTEM_API FImGuiDeveloperToolkitConfiguration
 {
 	GENERATED_BODY()
 
 	UPROPERTY(Transient, VisibleAnywhere)
-	bool bShow = false;
+	bool bShown = false;
 
 	void Initialize();
 
 	void Tick(float DeltaTime);
 
+	void SetFont(const FUtf8String& Name, int32 Size);
+
 	ImFont* GetFont() const;
 
+	void SetShown(const FAnsiString& ToolName, bool bToolShown);
+
+	bool IsShown(const FAnsiString& ToolName) const;
+
 private:
-	UPROPERTY(Transient, VisibleAnywhere)
-	TMap<FUtf8String, FUtf8String> AvailableFontPathsByName;
+	UPROPERTY(Transient, VisibleAnywhere) TMap<FUtf8String, FUtf8String> AvailableFontPathsByName;
 
 	UPROPERTY(VisibleAnywhere)
 	FImGuiDeveloperToolkitFont SelectedFont;

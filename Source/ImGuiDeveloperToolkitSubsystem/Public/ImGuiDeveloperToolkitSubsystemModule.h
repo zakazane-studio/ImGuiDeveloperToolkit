@@ -7,7 +7,7 @@
 namespace ImGuiDeveloperToolkit
 {
 
-class FImGuiDeveloperToolkitModule : public IModuleInterface
+class FImGuiDeveloperToolkitSubsystemModule final : public IModuleInterface
 {
 public:
 	/** IModuleInterface implementation */

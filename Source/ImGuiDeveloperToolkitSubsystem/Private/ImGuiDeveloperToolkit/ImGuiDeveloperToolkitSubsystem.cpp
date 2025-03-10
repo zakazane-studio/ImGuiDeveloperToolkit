@@ -3,13 +3,14 @@
 #include "ImGuiDeveloperToolkit/ImGuiDeveloperToolkitSubsystem.h"
 
 #include "ImGuiDeveloperToolkit/ImGuiDeveloperToolkitTool.h"
+#include "ImGuiDeveloperToolkit/ImGuiDeveloperToolkitWindow.h"
 
 #include <imgui.h>
 
 namespace ImGuiDeveloperToolkitSubsystemPrivate
 {
 
-bool IsWithinCurrentContext(const UImGuiDeveloperToolkitTool& Tool)
+EImGuiDeveloperToolkitToolContext GetContext()
 {
 	const bool bInEditor =
 #if WITH_EDITOR
@@ -18,11 +19,12 @@ bool IsWithinCurrentContext(const UImGuiDeveloperToolkitTool& Tool)
 		false;
 #endif
 
-	const EImGuiDeveloperToolkitToolContext ToolContext = Tool.GetContext();
+	return bInEditor ? EImGuiDeveloperToolkitToolContext::Editor : EImGuiDeveloperToolkitToolContext::Game;
+}
 
-	return ToolContext == EImGuiDeveloperToolkitToolContext::EditorAndGame
-		   || (ToolContext == EImGuiDeveloperToolkitToolContext::EditorOnly && bInEditor)
-		   || (ToolContext == EImGuiDeveloperToolkitToolContext::GameOnly && !bInEditor);
+bool IsWithinCurrentContext(const UImGuiDeveloperToolkitTool& Tool)
+{
+	return EnumHasAnyFlags(Tool.GetContext(), GetContext());
 }
 
 }  // namespace ImGuiDeveloperToolkitSubsystemPrivate
@@ -31,8 +33,8 @@ void UImGuiDeveloperToolkitSubsystem::Initialize(FSubsystemCollectionBase& Colle
 {
 	Super::Initialize(Collection);
 
-	PopulateTools();
 	Configuration.Initialize();
+	PopulateTools();
 }
 
 void UImGuiDeveloperToolkitSubsystem::ToggleShow()
@@ -45,7 +47,7 @@ bool UImGuiDeveloperToolkitSubsystem::IsShow() const
 	return bShow;
 }
 
-void UImGuiDeveloperToolkitSubsystem::Tick(float DeltaTime)
+void UImGuiDeveloperToolkitSubsystem::Tick(const float DeltaTime)
 {
 	using namespace ImGuiDeveloperToolkitSubsystemPrivate;
 
@@ -142,14 +144,18 @@ void UImGuiDeveloperToolkitSubsystem::PopulateTools()
 	}
 }
 
-void UImGuiDeveloperToolkitSubsystem::TickMainWindow(float DeltaTime)
+void UImGuiDeveloperToolkitSubsystem::TickMainWindow(const float DeltaTime)
 {
+	using namespace ImGuiDeveloperToolkit;
+
 	if (bShow)
 	{
 		ON_SCOPE_EXIT
 		{
 			ImGui::End();
 		};
+
+		SetNextWindowPosAndSizeWithinMainViewport(ImVec2{.6f, .1f}, ImVec2{.3f, .3f}, ImGuiCond_FirstUseEver);
 
 		if (ImGui::Begin("Developer Toolkit", &bShow, ImGuiWindowFlags_MenuBar))
 		{
@@ -159,21 +165,21 @@ void UImGuiDeveloperToolkitSubsystem::TickMainWindow(float DeltaTime)
 	}
 }
 
-void UImGuiDeveloperToolkitSubsystem::TickConfigurationWindow(float DeltaTime)
+void UImGuiDeveloperToolkitSubsystem::TickConfigurationWindow(const float DeltaTime)
 {
 	Configuration.Tick(DeltaTime);
 }
 
-void UImGuiDeveloperToolkitSubsystem::TickMainMenu(float DeltaTime)
+void UImGuiDeveloperToolkitSubsystem::TickMainMenu(const float DeltaTime)
 {
 	if (ImGui::BeginMenuBar())
 	{
-		Configuration.bShow = ImGui::MenuItem("Configuration") || Configuration.bShow;
+		Configuration.bShown = ImGui::MenuItem("Configuration") || Configuration.bShown;
 		ImGui::EndMenuBar();
 	}
 }
 
-void UImGuiDeveloperToolkitSubsystem::TickToolList(float DeltaTime)
+void UImGuiDeveloperToolkitSubsystem::TickToolList(const float DeltaTime)
 {
 	using namespace ImGuiDeveloperToolkitSubsystemPrivate;
 
@@ -192,23 +198,31 @@ void UImGuiDeveloperToolkitSubsystem::TickToolList(float DeltaTime)
 		{
 			if (ImGui::Button(*ToolName))
 			{
-				Tool->Show();
+				Configuration.SetShown(ToolName, true);
+				bShow = false;
 			}
 		}
 	}
 }
 
-void UImGuiDeveloperToolkitSubsystem::TickTools(float DeltaTime)
+void UImGuiDeveloperToolkitSubsystem::TickTools(const float DeltaTime)
 {
 	using namespace ImGuiDeveloperToolkitSubsystemPrivate;
 
+	const EImGuiDeveloperToolkitToolContext Context = GetContext();
+
 	for (UImGuiDeveloperToolkitTool* Tool : Tools)
 	{
-		if (!IsValid(Tool) || !IsWithinCurrentContext(*Tool))
+		if (!IsValid(Tool) || !EnumHasAnyFlags(Tool->GetContext(), Context))
 		{
 			continue;
 		}
 
-		Tool->Tick(DeltaTime);
+		const FAnsiString ToolName = Tool->GetToolName();
+
+		bool bShown = Configuration.IsShown(ToolName);
+		Tool->Tick(DeltaTime, bShown, Context);
+
+		Configuration.SetShown(ToolName, bShown);
 	}
 }

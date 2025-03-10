@@ -15,11 +15,14 @@ class UImGuiDeveloperToolkitTool;
  * Stores DeveloperToolkitTools, ticks them and displays a window allowing tool selection and filtering.
  */
 UCLASS()
-class IMGUIDEVELOPERTOOLKIT_API UImGuiDeveloperToolkitSubsystem final : public UEngineSubsystem,
-																		public FTickableGameObject
+class IMGUIDEVELOPERTOOLKITSUBSYSTEM_API UImGuiDeveloperToolkitSubsystem final : public UEngineSubsystem,
+																				 public FTickableGameObject
 {
 	GENERATED_BODY()
 public:
+	UPROPERTY(VisibleAnywhere)
+	FImGuiDeveloperToolkitConfiguration Configuration;
+
 	// ~ USubsystem
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	// ~ USubsystem
@@ -57,9 +60,6 @@ private:
 
 	UPROPERTY(Transient, VisibleAnywhere)
 	bool bShow = false;
-
-	UPROPERTY(VisibleAnywhere)
-	FImGuiDeveloperToolkitConfiguration Configuration;
 
 	UPROPERTY(Transient, VisibleAnywhere)
 	TArray<TObjectPtr<UImGuiDeveloperToolkitTool>> Tools;
